@@ -1,0 +1,72 @@
+# Rust generated files
+/target/
+Cargo.lock  # Only ignore for libraries; commit for binaries
+
+# Backup files from rustfmt
+**/*.rs.bk
+**/*.rs.swp
+
+# Debug symbols (Windows)
+*.pdb
+
+# IDEs and Editors
+# VSCode
+.vscode/
+*.code-workspace
+
+# Environment and secrets
+.env
+.env.local
+*.key
+*.pem
+secrets/
+
+# Testing and coverage
+*.profraw
+*.profdata
+coverage/
+tarpaulin-report.html
+
+# Build artifacts
+*.o
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+
+# Logs
+*.log
+
+# Database files (if using local SQLite for dev)
+*.db
+*.sqlite
+*.sqlite3
+
+# OS-specific
+Thumbs.db
+
+# Additional common ignores
+# Cargo and Rust build artifacts
+.cargo/
+target/.fingerprint/
+**/*.rmeta
+**/*.rlib
+*.dSYM/
+
+# Environment files
+.env.*
+
+# Web / frontend
+node_modules/
+dist/
+pkg/
+build/
+
+# Caches
+.cache/
+.parcel-cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

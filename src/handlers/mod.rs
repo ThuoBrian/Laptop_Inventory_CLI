@@ -1,2 +1,2 @@
-pub mod laptop;
+pub mod laptops;
 pub mod users;

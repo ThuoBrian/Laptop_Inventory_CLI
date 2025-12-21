@@ -8,6 +8,7 @@ pub enum AppError {
     Database(String),
 }
 
+// Implementing Display trait for AppError to provide readable error messages.
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -18,6 +19,7 @@ impl fmt::Display for AppError {
     }
 }
 
+// Implementing ResponseError trait to convert AppError into HTTP responses.
 impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self {
@@ -26,11 +28,14 @@ impl ResponseError for AppError {
             AppError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
-
+    // Generating HTTP response from the error.
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(self.status_code()).body(self.to_string())
     }
 }
+
+// Converting std::io::Error into AppError.
+// This is useful for handling I/O related errors in the application.
 
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {

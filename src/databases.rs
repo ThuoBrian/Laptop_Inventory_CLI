@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 pub async fn create_user(pool: &PgPool, new_user: CreateUser) -> Result<User, AppError> {
-    let result = sqlx::query!(
+    let result = sqlx::query_as!(
         User,
         r#"
         INSERT INTO users (id, username, email)
@@ -55,4 +55,25 @@ pub async fn get_user_by_id(pool: &PgPool, user_id: Uuid) -> Result<User, AppErr
     })?;
 
     Ok(user)
+}
+pub async fn create_laptop(pool: &PgPool, new_laptop: CreateLaptop) -> Result<Laptop, AppError> {
+    let result = sqlx::query!(
+        Laptop,
+        r#"
+        INSERT INTO laptops (id, user_id, brand, model, serial_number, purchase_date)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, user_id, brand, model, serial_number, purchase_date
+        "#,
+        Uuid::new_v4(),
+        new_laptop.user_id,
+        new_laptop.brand,
+        new_laptop.model,
+        new_laptop.serial_number,
+        new_laptop.purchase_date
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(AppError::from)?;
+
+    Ok(result)
 }

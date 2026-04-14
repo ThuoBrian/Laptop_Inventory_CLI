@@ -1,43 +1,54 @@
 use actix_web::{HttpResponse, error::ResponseError, http::StatusCode};
+use serde_json::json;
 use std::fmt;
 
 #[derive(Debug)]
 pub enum AppError {
     NotFound(String),
     BadRequest(String),
+    Conflict(String),
     Database(String),
 }
 
-// Implementing Display trait for AppError to provide readable error messages.
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AppError::NotFound(msg) => write!(f, "Not Found: {}", msg),
-            AppError::BadRequest(msg) => write!(f, "Bad Request: {}", msg),
-            AppError::Database(msg) => write!(f, "Database Error: {}", msg),
+            AppError::NotFound(msg)   => write!(f, "{}", msg),
+            AppError::BadRequest(msg) => write!(f, "{}", msg),
+            AppError::Conflict(msg)   => write!(f, "{}", msg),
+            AppError::Database(msg)   => write!(f, "{}", msg),
         }
     }
 }
 
-// Implementing ResponseError trait to convert AppError into HTTP responses.
 impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self {
-            AppError::NotFound(_) => StatusCode::NOT_FOUND,
+            AppError::NotFound(_)   => StatusCode::NOT_FOUND,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
-            AppError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::Conflict(_)   => StatusCode::CONFLICT,
+            AppError::Database(_)   => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
-    // Generating HTTP response from the error.
+
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).body(self.to_string())
+        let body = json!({ "error": self.to_string() });
+        HttpResponse::build(self.status_code()).json(body)
     }
 }
 
-// Converting std::io::Error into AppError.
-// This is useful for handling I/O related errors in the application.
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
-        AppError::Database(err.to_string())
+        match &err {
+            sqlx::Error::Database(db_err) => {
+                // PostgreSQL unique-constraint violation
+                if db_err.code().as_deref() == Some("23505") {
+                    AppError::Conflict(db_err.message().to_string())
+                } else {
+                    AppError::Database(err.to_string())
+                }
+            }
+            _ => AppError::Database(err.to_string()),
+        }
     }
 }

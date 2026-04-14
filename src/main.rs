@@ -2,6 +2,7 @@ mod db;
 mod error;
 mod handlers;
 mod models;
+mod validation;
 
 use actix_web::{App, HttpServer, middleware, web};
 use sqlx::PgPool;
@@ -18,8 +19,17 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to connect to PostgreSQL");
 
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run migrations");
+
+    let host = env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let port = env::var("PORT").unwrap_or_else(|_| "5342".to_string());
+    let bind_addr = format!("{}:{}", host, port);
+
     log::info!("Database connection established.");
-    log::info!("Server starting at http://127.0.0.1:5342");
+    log::info!("Server starting at http://{}", bind_addr);
 
     HttpServer::new(move || {
         App::new()
@@ -40,7 +50,7 @@ async fn main() -> std::io::Result<()> {
             .service(handlers::laptops::assign_laptop)
             .service(handlers::laptops::unassign_laptop)
     })
-    .bind("127.0.0.1:5342")?
+    .bind(&bind_addr)?
     .run()
     .await
 }

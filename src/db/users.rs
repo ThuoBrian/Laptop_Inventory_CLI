@@ -75,6 +75,8 @@ pub async fn update_user(
 }
 
 pub async fn delete_user(pool: &PgPool, user_id: Uuid) -> Result<(), AppError> {
+    let mut tx = pool.begin().await?;
+
     // Unassign any laptops belonging to this user before deletion.
     sqlx::query(
         r#"
@@ -84,17 +86,19 @@ pub async fn delete_user(pool: &PgPool, user_id: Uuid) -> Result<(), AppError> {
         "#,
     )
     .bind(user_id)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
 
     let result = sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(user_id)
-        .execute(pool)
+        .execute(&mut *tx)
         .await?;
 
     if result.rows_affected() == 0 {
+        // Returning NotFound will drop the transaction, rolling it back.
         return Err(AppError::NotFound(format!("User {} not found", user_id)));
     }
 
+    tx.commit().await?;
     Ok(())
 }

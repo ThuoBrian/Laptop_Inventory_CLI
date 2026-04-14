@@ -1,4 +1,4 @@
-use crate::{db, error::AppError, models::*};
+use crate::{db, error::AppError, models::*, validation};
 use actix_web::{HttpResponse, Responder, delete, get, post, put, web};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -13,7 +13,12 @@ pub async fn create_laptop(
     pool: web::Data<PgPool>,
     body: web::Json<CreateLaptop>,
 ) -> Result<impl Responder, AppError> {
-    let laptop = db::laptops::create_laptop(&pool, body.into_inner()).await?;
+    let body = body.into_inner();
+    let brand = validation::validate_required_string(&body.brand, "Brand")?;
+    let model = validation::validate_required_string(&body.model, "Model")?;
+    let serial_number = validation::validate_required_string(&body.serial_number, "Serial number")?;
+    let validated = CreateLaptop { brand, model, serial_number, purchase_date: body.purchase_date };
+    let laptop = db::laptops::create_laptop(&pool, validated).await?;
     Ok(HttpResponse::Created().json(laptop))
 }
 
@@ -41,7 +46,14 @@ pub async fn update_laptop(
     path: web::Path<Uuid>,
     body: web::Json<UpdateLaptop>,
 ) -> Result<impl Responder, AppError> {
-    let laptop = db::laptops::update_laptop(&pool, path.into_inner(), body.into_inner()).await?;
+    let body = body.into_inner();
+    let brand = validation::validate_optional_string(body.brand.as_ref(), "Brand")?;
+    let model = validation::validate_optional_string(body.model.as_ref(), "Model")?;
+    let serial_number = validation::validate_optional_string(body.serial_number.as_ref(), "Serial number")?;
+    let status = body.status; // validated in db layer
+    let purchase_date = body.purchase_date;
+    let validated = UpdateLaptop { brand, model, serial_number, status, purchase_date };
+    let laptop = db::laptops::update_laptop(&pool, path.into_inner(), validated).await?;
     Ok(HttpResponse::Ok().json(laptop))
 }
 

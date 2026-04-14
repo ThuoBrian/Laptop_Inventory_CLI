@@ -1,72 +1,53 @@
-# Rust generated files
+# ── Rust build output ─────────────────────────────────────────────────────
 /target/
-Cargo.lock  # Only ignore for libraries; commit for binaries
 
-# Backup files from rustfmt
+# Cargo.lock is committed for binary crates (applications).
+# Remove this line only if this becomes a library.
+
+# Rustfmt backup files
 **/*.rs.bk
 **/*.rs.swp
 
-# Debug symbols (Windows)
+# Windows debug symbols
 *.pdb
 
-# IDEs and Editors
-# VSCode
-.vscode/
-*.code-workspace
-
-# Environment and secrets
+# ── Secrets / environment ─────────────────────────────────────────────────
 .env
 .env.local
+.env.*
+# Keep .env.example committed so new contributors know what to set.
+!.env.example
+
 *.key
 *.pem
 secrets/
 
-# Testing and coverage
+# ── Cargo local config ────────────────────────────────────────────────────
+# Only the Cargo registry/git cache is excluded — NOT .cargo/config.toml,
+# which is project config and should be version-controlled.
+.cargo/registry/
+.cargo/git/
+
+# ── IDEs & editors ────────────────────────────────────────────────────────
+.vscode/
+*.code-workspace
+.idea/
+*.iml
+
+# ── OS-generated files ────────────────────────────────────────────────────
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ── Test / coverage artifacts ─────────────────────────────────────────────
 *.profraw
 *.profdata
 coverage/
 tarpaulin-report.html
 
-# Build artifacts
-*.o
-*.so
-*.dylib
-*.dll
-*.a
-*.lib
-*.exe
+# ── Server runtime files ──────────────────────────────────────────────────
+.server.pid
+server.log
 
-# Logs
+# ── Logs ──────────────────────────────────────────────────────────────────
 *.log
-
-# Database files (if using local SQLite for dev)
-*.db
-*.sqlite
-*.sqlite3
-
-# OS-specific
-Thumbs.db
-
-# Additional common ignores
-# Cargo and Rust build artifacts
-.cargo/
-target/.fingerprint/
-**/*.rmeta
-**/*.rlib
-*.dSYM/
-
-# Environment files
-.env.*
-
-# Web / frontend
-node_modules/
-dist/
-pkg/
-build/
-
-# Caches
-.cache/
-.parcel-cache/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/

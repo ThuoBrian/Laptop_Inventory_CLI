@@ -36,7 +36,6 @@ impl ResponseError for AppError {
 
 // Converting std::io::Error into AppError.
 // This is useful for handling I/O related errors in the application.
-
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
         AppError::Database(err.to_string())

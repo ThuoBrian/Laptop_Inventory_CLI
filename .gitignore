@@ -23,10 +23,9 @@
 secrets/
 
 # ── Cargo local config ────────────────────────────────────────────────────
-# Only the Cargo registry/git cache is excluded — NOT .cargo/config.toml,
-# which is project config and should be version-controlled.
-.cargo/registry/
-.cargo/git/
+# .cargo/config.toml may contain machine-specific linker overrides;
+# ignore the whole directory since it's a local development concern.
+.cargo/
 
 # ── IDEs & editors ────────────────────────────────────────────────────────
 .vscode/

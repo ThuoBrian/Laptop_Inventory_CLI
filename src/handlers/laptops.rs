@@ -4,8 +4,10 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
-pub struct StatusQuery {
-    pub status: Option<String>,
+pub struct LaptopListQuery {
+    pub status: Option<LaptopStatus>,
+    pub page: Option<i64>,
+    pub per_page: Option<i64>,
 }
 
 #[post("/laptops")]
@@ -25,9 +27,11 @@ pub async fn create_laptop(
 #[get("/laptops")]
 pub async fn get_all_laptops(
     pool: web::Data<PgPool>,
-    query: web::Query<StatusQuery>,
+    query: web::Query<LaptopListQuery>,
 ) -> Result<impl Responder, AppError> {
-    let laptops = db::laptops::get_all_laptops(&pool, query.into_inner().status).await?;
+    let page = query.page.unwrap_or(DEFAULT_PAGE);
+    let per_page = query.per_page.unwrap_or(DEFAULT_PER_PAGE).min(MAX_PER_PAGE);
+    let laptops = db::laptops::get_all_laptops(&pool, query.into_inner().status, page, per_page).await?;
     Ok(HttpResponse::Ok().json(laptops))
 }
 
@@ -50,7 +54,7 @@ pub async fn update_laptop(
     let brand = validation::validate_optional_string(body.brand.as_ref(), "Brand")?;
     let model = validation::validate_optional_string(body.model.as_ref(), "Model")?;
     let serial_number = validation::validate_optional_string(body.serial_number.as_ref(), "Serial number")?;
-    let status = body.status; // validated in db layer
+    let status = body.status;
     let purchase_date = body.purchase_date;
     let validated = UpdateLaptop { brand, model, serial_number, status, purchase_date };
     let laptop = db::laptops::update_laptop(&pool, path.into_inner(), validated).await?;

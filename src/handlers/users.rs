@@ -3,6 +3,12 @@ use actix_web::{HttpResponse, Responder, delete, get, post, put, web};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+#[derive(serde::Deserialize)]
+pub struct PaginationParams {
+    pub page: Option<i64>,
+    pub per_page: Option<i64>,
+}
+
 #[post("/users")]
 pub async fn create_user(
     pool: web::Data<PgPool>,
@@ -17,9 +23,15 @@ pub async fn create_user(
     Ok(HttpResponse::Created().json(user))
 }
 
+
 #[get("/users")]
-pub async fn get_all_users(pool: web::Data<PgPool>) -> Result<impl Responder, AppError> {
-    let users = db::users::get_all_users(&pool).await?;
+pub async fn get_all_users(
+    pool: web::Data<PgPool>,
+    query: web::Query<PaginationParams>,
+) -> Result<impl Responder, AppError> {
+    let page = query.page.unwrap_or(DEFAULT_PAGE);
+    let per_page = query.per_page.unwrap_or(DEFAULT_PER_PAGE).min(MAX_PER_PAGE);
+    let users = db::users::get_all_users(&pool, page, per_page).await?;
     Ok(HttpResponse::Ok().json(users))
 }
 

@@ -72,8 +72,10 @@ if ! kill -0 "$PID" 2>/dev/null; then
 fi
 
 echo "$PID" > "$PID_FILE"
+HOST_DISPLAY="${HOST:-127.0.0.1}"
+PORT_DISPLAY="${PORT:-5342}"
 echo ""
-echo "  Server running at http://127.0.0.1:5342"
+echo "  Server running at http://${HOST_DISPLAY}:${PORT_DISPLAY}"
 echo "  PID         : $PID"
 echo "  Log file    : $LOG_FILE"
 echo "  Build mode  : $BUILD_MODE"

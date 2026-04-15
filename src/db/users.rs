@@ -20,18 +20,31 @@ pub async fn create_user(pool: &PgPool, new_user: CreateUser) -> Result<User, Ap
     Ok(user)
 }
 
-pub async fn get_all_users(pool: &PgPool) -> Result<Vec<User>, AppError> {
+pub async fn get_all_users(
+    pool: &PgPool,
+    page: i64,
+    per_page: i64,
+) -> Result<PaginatedResponse<User>, AppError> {
+    let offset = (page - 1) * per_page;
+
+    let total: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users")
+        .fetch_one(pool)
+        .await?;
+
     let users = sqlx::query_as::<_, User>(
         r#"
         SELECT id, username, email, department, created_at, updated_at
         FROM users
         ORDER BY created_at DESC
+        LIMIT $1 OFFSET $2
         "#,
     )
+    .bind(per_page)
+    .bind(offset)
     .fetch_all(pool)
     .await?;
 
-    Ok(users)
+    Ok(PaginatedResponse::new(users, total.0, page, per_page))
 }
 
 pub async fn get_user_by_id(pool: &PgPool, user_id: Uuid) -> Result<User, AppError> {

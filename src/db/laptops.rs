@@ -2,19 +2,6 @@ use crate::{db::users::get_user_by_id, error::AppError, models::*};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-const VALID_STATUSES: &[&str] = &["available", "assigned", "in_repair", "retired"];
-
-fn validate_status(status: &str) -> Result<(), AppError> {
-    if !VALID_STATUSES.contains(&status) {
-        return Err(AppError::BadRequest(format!(
-            "Invalid status '{}'. Must be one of: {}",
-            status,
-            VALID_STATUSES.join(", ")
-        )));
-    }
-    Ok(())
-}
-
 pub async fn create_laptop(pool: &PgPool, new_laptop: CreateLaptop) -> Result<Laptop, AppError> {
     let laptop = sqlx::query_as::<_, Laptop>(
         r#"
@@ -37,38 +24,59 @@ pub async fn create_laptop(pool: &PgPool, new_laptop: CreateLaptop) -> Result<La
 
 pub async fn get_all_laptops(
     pool: &PgPool,
-    status_filter: Option<String>,
-) -> Result<Vec<Laptop>, AppError> {
-    if let Some(ref s) = status_filter {
-        validate_status(s)?;
-    }
+    status_filter: Option<LaptopStatus>,
+    page: i64,
+    per_page: i64,
+) -> Result<PaginatedResponse<Laptop>, AppError> {
+    let offset = (page - 1) * per_page;
 
-    let laptops = match status_filter {
+    let laptops = match &status_filter {
         Some(status) => {
-            sqlx::query_as::<_, Laptop>(
+            let total: (i64,) = sqlx::query_as(
+                "SELECT COUNT(*) FROM laptops WHERE status = $1",
+            )
+            .bind(status.to_string())
+            .fetch_one(pool)
+            .await?;
+
+            let rows = sqlx::query_as::<_, Laptop>(
                 r#"
                 SELECT id, brand, model, serial_number, status, assigned_to,
                        purchase_date, created_at, updated_at
                 FROM laptops
                 WHERE status = $1
                 ORDER BY created_at DESC
+                LIMIT $2 OFFSET $3
                 "#,
             )
-            .bind(status)
+            .bind(status.to_string())
+            .bind(per_page)
+            .bind(offset)
             .fetch_all(pool)
-            .await?
+            .await?;
+
+            PaginatedResponse::new(rows, total.0, page, per_page)
         }
         None => {
-            sqlx::query_as::<_, Laptop>(
+            let total: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM laptops")
+                .fetch_one(pool)
+                .await?;
+
+            let rows = sqlx::query_as::<_, Laptop>(
                 r#"
                 SELECT id, brand, model, serial_number, status, assigned_to,
                        purchase_date, created_at, updated_at
                 FROM laptops
                 ORDER BY created_at DESC
+                LIMIT $1 OFFSET $2
                 "#,
             )
+            .bind(per_page)
+            .bind(offset)
             .fetch_all(pool)
-            .await?
+            .await?;
+
+            PaginatedResponse::new(rows, total.0, page, per_page)
         }
     };
 
@@ -96,8 +104,7 @@ pub async fn update_laptop(
     update: UpdateLaptop,
 ) -> Result<Laptop, AppError> {
     if let Some(ref s) = update.status {
-        validate_status(s)?;
-        if s == "assigned" {
+        if s == &LaptopStatus::Assigned {
             return Err(AppError::BadRequest(
                 "Use POST /laptops/{id}/assign to assign a laptop to a user.".to_string(),
             ));
@@ -153,7 +160,7 @@ pub async fn assign_laptop(
 
     // Verify the laptop is available.
     let laptop = get_laptop_by_id(pool, laptop_id).await?;
-    if laptop.status != "available" {
+    if laptop.status != LaptopStatus::Available {
         return Err(AppError::BadRequest(format!(
             "Laptop {} cannot be assigned — current status is '{}'.",
             laptop_id, laptop.status
@@ -178,7 +185,7 @@ pub async fn assign_laptop(
 
 pub async fn unassign_laptop(pool: &PgPool, laptop_id: Uuid) -> Result<Laptop, AppError> {
     let laptop = get_laptop_by_id(pool, laptop_id).await?;
-    if laptop.status != "assigned" {
+    if laptop.status != LaptopStatus::Assigned {
         return Err(AppError::BadRequest(format!(
             "Laptop {} is not currently assigned (status: '{}').",
             laptop_id, laptop.status

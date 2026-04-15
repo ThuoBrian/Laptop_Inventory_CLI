@@ -52,7 +52,11 @@ pub fn validate_email(email: &str) -> Result<String, AppError> {
             "Email cannot exceed 100 characters".to_string(),
         ));
     }
-    if !trimmed.contains('@') || !trimmed.split('@').nth(1).map_or(false, |d| d.contains('.')) {
+    if !trimmed.contains('@') {
+        return Err(AppError::BadRequest("Invalid email format".to_string()));
+    }
+    let domain = trimmed.split('@').nth(1).unwrap_or("");
+    if domain.is_empty() || !domain.contains('.') || domain.starts_with('.') || domain.ends_with('.') {
         return Err(AppError::BadRequest("Invalid email format".to_string()));
     }
     Ok(trimmed.to_string())

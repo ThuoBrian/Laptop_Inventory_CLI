@@ -32,7 +32,14 @@ impl ResponseError for AppError {
     }
 
     fn error_response(&self) -> HttpResponse {
-        let body = json!({ "error": self.to_string() });
+        if let AppError::Database(ref msg) = self {
+            log::error!("Database error: {}", msg);
+        }
+        let message = match self {
+            AppError::Database(_) => "Internal server error".to_string(),
+            _ => self.to_string(),
+        };
+        let body = json!({ "error": message });
         HttpResponse::build(self.status_code()).json(body)
     }
 }

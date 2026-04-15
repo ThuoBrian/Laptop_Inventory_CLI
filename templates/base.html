@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Laptop Inventory{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h2>Inventory</h2>
+            <a href="/ui" class="{% if page_id == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="/ui/laptops" class="{% if page_id == 'laptops' %}active{% endif %}">Laptops</a>
+            <a href="/ui/users" class="{% if page_id == 'users' %}active{% endif %}">Users</a>
+        </nav>
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

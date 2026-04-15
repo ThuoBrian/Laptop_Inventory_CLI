@@ -1,0 +1,78 @@
+<table>
+    <thead>
+        <tr>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Serial</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Purchased</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for laptop in laptops %}
+        <tr>
+            <td>{{ laptop.brand }}</td>
+            <td>{{ laptop.model }}</td>
+            <td>{{ laptop.serial_number }}</td>
+            <td><span class="badge badge-{{ laptop.status }}">{{ laptop.status }}</span></td>
+            <td>{{ laptop.assignee_name | default(value="—") }}</td>
+            <td>{{ laptop.purchase_date }}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm"
+                        hx-get="/ui/laptops/{{ laptop.id }}/edit-form"
+                        hx-target="#laptop-form-container"
+                        hx-swap="innerHTML"
+                        onclick="document.getElementById('laptop-form-modal').showModal()">
+                    Edit
+                </button>
+                {% if laptop.status == "available" %}
+                <button class="btn btn-primary btn-sm"
+                        hx-get="/ui/laptops/{{ laptop.id }}/assign-form"
+                        hx-target="#assign-modal-container"
+                        hx-swap="innerHTML"
+                        onclick="document.getElementById('assign-modal').showModal()">
+                    Assign
+                </button>
+                {% endif %}
+                {% if laptop.status == "assigned" %}
+                <button class="btn btn-secondary btn-sm"
+                        hx-post="/ui/laptops/{{ laptop.id }}/unassign"
+                        hx-target="#laptop-table"
+                        hx-swap="innerHTML">
+                    Unassign
+                </button>
+                {% endif %}
+                <button class="btn btn-danger btn-sm"
+                        hx-post="/ui/laptops/{{ laptop.id }}/delete"
+                        hx-target="#laptop-table"
+                        hx-swap="innerHTML"
+                        hx-confirm="Delete this laptop? This cannot be undone.">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    {% if page > 1 %}
+    <button class="btn btn-secondary btn-sm"
+            hx-get="/ui/laptops?page={{ page - 1 }}"
+            hx-target="#laptop-table"
+            hx-swap="innerHTML">
+        Previous
+    </button>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <button class="btn btn-secondary btn-sm"
+            hx-get="/ui/laptops?page={{ page + 1 }}"
+            hx-target="#laptop-table"
+            hx-swap="innerHTML">
+        Next
+    </button>
+    {% endif %}
+</div>

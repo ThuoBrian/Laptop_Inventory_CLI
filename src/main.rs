@@ -3,6 +3,7 @@ mod error;
 mod handlers;
 mod models;
 mod request_id;
+mod ui;
 mod validation;
 
 use actix_web::{App, HttpServer, middleware, web};
@@ -40,16 +41,20 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(pool.clone()))
-            .app_data(web::JsonConfig::default().limit(1024 * 1024)) // 1 MB
+            .app_data(web::Data::new(ui::templates::create_environment()))
+            .app_data(web::JsonConfig::default().limit(1024 * 1024))
+            .app_data(web::FormConfig::default().limit(1024 * 1024))
             .wrap(request_id::RequestId)
             .wrap(middleware::Logger::default())
-            // ── Users ────────────────────────────────────────────────────
+            // ── Static files ─────────────────────────────────────────
+            .service(actix_files::Files::new("/static", "./static"))
+            // ── API: Users ───────────────────────────────────────────
             .service(handlers::users::create_user)
             .service(handlers::users::get_all_users)
             .service(handlers::users::get_user)
             .service(handlers::users::update_user)
             .service(handlers::users::delete_user)
-            // ── Laptops ──────────────────────────────────────────────────
+            // ── API: Laptops ──────────────────────────────────────────
             .service(handlers::laptops::create_laptop)
             .service(handlers::laptops::get_all_laptops)
             .service(handlers::laptops::get_laptop)
@@ -57,6 +62,23 @@ async fn main() -> std::io::Result<()> {
             .service(handlers::laptops::delete_laptop)
             .service(handlers::laptops::assign_laptop)
             .service(handlers::laptops::unassign_laptop)
+            // ── Web UI: Pages ────────────────────────────────────────
+            .service(ui::pages::dashboard)
+            .service(ui::pages::laptops_page)
+            .service(ui::pages::users_page)
+            // ── Web UI: Laptop fragments ─────────────────────────────
+            .service(ui::fragments::create_laptop_form)
+            .service(ui::fragments::edit_laptop_form)
+            .service(ui::fragments::update_laptop_form)
+            .service(ui::fragments::delete_laptop_form)
+            .service(ui::fragments::assign_laptop_form_get)
+            .service(ui::fragments::assign_laptop_form)
+            .service(ui::fragments::unassign_laptop_form)
+            // ── Web UI: User fragments ───────────────────────────────
+            .service(ui::fragments::create_user_form)
+            .service(ui::fragments::edit_user_form)
+            .service(ui::fragments::update_user_form)
+            .service(ui::fragments::delete_user_form)
     })
     .bind(&bind_addr)?
     .run()

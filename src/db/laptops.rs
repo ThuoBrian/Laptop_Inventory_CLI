@@ -206,3 +206,86 @@ pub async fn unassign_laptop(pool: &PgPool, laptop_id: Uuid) -> Result<Laptop, A
     .await
     .map_err(AppError::from)
 }
+
+// ── Web UI queries (with assignee name) ───────────────────────────────────
+
+pub async fn get_all_laptops_with_assignee(
+    pool: &PgPool,
+    status_filter: Option<LaptopStatus>,
+    page: i64,
+    per_page: i64,
+) -> Result<PaginatedResponse<LaptopWithAssignee>, AppError> {
+    let offset = (page - 1) * per_page;
+
+    let result = match &status_filter {
+        Some(status) => {
+            let total: (i64,) = sqlx::query_as(
+                "SELECT COUNT(*) FROM laptops WHERE status = $1",
+            )
+            .bind(status.to_string())
+            .fetch_one(pool)
+            .await?;
+
+            let rows = sqlx::query_as::<_, LaptopWithAssignee>(
+                r#"
+                SELECT l.id, l.brand, l.model, l.serial_number, l.status,
+                       l.assigned_to, u.username AS assignee_name,
+                       l.purchase_date, l.created_at, l.updated_at
+                FROM laptops l
+                LEFT JOIN users u ON l.assigned_to = u.id
+                WHERE l.status = $1
+                ORDER BY l.created_at DESC
+                LIMIT $2 OFFSET $3
+                "#,
+            )
+            .bind(status.to_string())
+            .bind(per_page)
+            .bind(offset)
+            .fetch_all(pool)
+            .await?;
+
+            PaginatedResponse::new(rows, total.0, page, per_page)
+        }
+        None => {
+            let total: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM laptops")
+                .fetch_one(pool)
+                .await?;
+
+            let rows = sqlx::query_as::<_, LaptopWithAssignee>(
+                r#"
+                SELECT l.id, l.brand, l.model, l.serial_number, l.status,
+                       l.assigned_to, u.username AS assignee_name,
+                       l.purchase_date, l.created_at, l.updated_at
+                FROM laptops l
+                LEFT JOIN users u ON l.assigned_to = u.id
+                ORDER BY l.created_at DESC
+                LIMIT $1 OFFSET $2
+                "#,
+            )
+            .bind(per_page)
+            .bind(offset)
+            .fetch_all(pool)
+            .await?;
+
+            PaginatedResponse::new(rows, total.0, page, per_page)
+        }
+    };
+
+    Ok(result)
+}
+
+pub async fn count_laptops(pool: &PgPool) -> Result<i64, AppError> {
+    let (count,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM laptops")
+        .fetch_one(pool)
+        .await?;
+    Ok(count)
+}
+
+pub async fn count_laptops_by_status(pool: &PgPool) -> Result<Vec<(String, i64)>, AppError> {
+    let counts: Vec<(String, i64)> = sqlx::query_as(
+        "SELECT status, COUNT(*) FROM laptops GROUP BY status ORDER BY status",
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(counts)
+}

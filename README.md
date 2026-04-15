@@ -1,14 +1,16 @@
 # Laptop Inventory CLI
 
-A REST API for managing laptop inventory and user assignments, built with Rust, Actix-web, and PostgreSQL.
+A REST API and web UI for managing laptop inventory and user assignments, built with Rust, Actix-web, and PostgreSQL.
 
 ## Tech Stack
 
 | Layer      | Technology                          |
 |------------|-------------------------------------|
-| Language   | Rust (stable)                       |
+| Language   | Rust (stable, edition 2021)        |
 | Web        | Actix-web 4                         |
 | Database   | PostgreSQL via SQLx 0.8             |
+| Templates  | Minijinja 2 (server-side HTML)     |
+| UI         | HTMX 2 (dynamic HTML over the wire)|
 | Runtime    | Tokio (async)                       |
 | Serialiser | Serde / serde_json                  |
 
@@ -32,14 +34,15 @@ cp .env.example .env        # then edit .env with your DB credentials
 ```env
 DATABASE_URL=postgres://<user>:<password>@localhost:5432/<dbname>
 RUST_LOG=info
+HOST=127.0.0.1
+PORT=5342
+DB_MAX_CONNECTIONS=10
 ```
 
-### 2. Create the database & run migrations
+### 2. Create the database
 
 ```bash
 psql -U <user> -c "CREATE DATABASE <dbname>;"
-psql -U <user> -d <dbname> -f migrations/20250102_create_users.sql
-psql -U <user> -d <dbname> -f migrations/20250101_create_laptops.sql
 ```
 
 ### 3. Build & run
@@ -49,7 +52,17 @@ cargo build
 cargo run
 ```
 
-Server starts at `http://127.0.0.1:5342`.
+Migrations run automatically on startup. The server starts at `http://127.0.0.1:5342`.
+
+## Web UI
+
+Open `http://127.0.0.1:5342/ui` in your browser for a full management interface:
+
+- **Dashboard** — summary cards with laptop counts by status
+- **Laptops** — browse, create, edit, assign, unassign, and delete laptops
+- **Users** — browse, create, edit, and delete users
+
+The UI uses HTMX for dynamic updates (no page reloads, no JavaScript framework) and Minijinja for server-side HTML rendering. Status badges are color-coded: available (green), assigned (blue), in repair (amber), retired (gray).
 
 ## API Endpoints
 
@@ -58,20 +71,19 @@ Server starts at `http://127.0.0.1:5342`.
 | Method   | Endpoint        | Description              | Body fields                          |
 |----------|-----------------|--------------------------|--------------------------------------|
 | `POST`   | `/users`        | Create a user            | `username`, `email`, `department`    |
-| `GET`    | `/users`        | List all users           | —                                    |
+| `GET`    | `/users`        | List users (paginated)  | `?page=1&per_page=50`               |
 | `GET`    | `/users/{id}`   | Get user by UUID         | —                                    |
 | `PUT`    | `/users/{id}`   | Update user (partial OK) | `username?`, `email?`, `department?` |
 | `DELETE` | `/users/{id}`   | Delete user              | —                                    |
 
-> Deleting a user automatically unassigns all laptops assigned to them.
+> Deleting a user automatically unassigns all laptops assigned to them (atomic transaction).
 
 ### Laptops
 
 | Method   | Endpoint                  | Description                        | Body fields                                          |
 |----------|---------------------------|------------------------------------|------------------------------------------------------|
 | `POST`   | `/laptops`                | Add a laptop                       | `brand`, `model`, `serial_number`, `purchase_date`   |
-| `GET`    | `/laptops`                | List all laptops                   | —                                                    |
-| `GET`    | `/laptops?status=<value>` | Filter by status                   | —                                                    |
+| `GET`    | `/laptops`                | List laptops (paginated)           | `?status=available&page=1&per_page=50`              |
 | `GET`    | `/laptops/{id}`           | Get laptop by UUID                 | —                                                    |
 | `PUT`    | `/laptops/{id}`           | Update laptop (partial OK)         | `brand?`, `model?`, `serial_number?`, `status?`, `purchase_date?` |
 | `DELETE` | `/laptops/{id}`           | Delete laptop                      | —                                                    |
@@ -80,8 +92,15 @@ Server starts at `http://127.0.0.1:5342`.
 
 **Laptop status values:** `available` | `assigned` | `in_repair` | `retired`
 
-> Use `/assign` and `/unassign` to manage the `assigned` status.  
+> Use `/assign` and `/unassign` to manage the `assigned` status.
 > Setting `status` directly via `PUT` allows `available`, `in_repair`, and `retired` only.
+
+### Input Validation
+
+All string fields are validated:
+- Non-empty (after trimming whitespace)
+- Maximum 100 characters
+- Email must contain `@` and a valid domain (e.g., `user@example.com`)
 
 ### Example requests
 
@@ -101,40 +120,65 @@ curl -s -X POST http://127.0.0.1:5342/laptops/<laptop-id>/assign \
   -H "Content-Type: application/json" \
   -d '{"user_id":"<user-id>"}'
 
-# Filter available laptops
-curl -s http://127.0.0.1:5342/laptops?status=available
+# List available laptops (page 1)
+curl -s http://127.0.0.1:5342/laptops?status=available&page=1&per_page=10
 ```
 
 ## Project Structure
 
 ```
 .
-├── .cargo/
-│   └── config.toml          # Linker configuration
 ├── migrations/
+│   ├── 20250101_create_laptops.sql
 │   ├── 20250102_create_users.sql
-│   └── 20250101_create_laptops.sql
+│   ├── 20250103_add_fk_laptops_assigned_to.sql
+│   └── 20250104_add_updated_at_trigger.sql
 ├── src/
 │   ├── main.rs              # Server setup & route registration
-│   ├── models.rs            # Request/response data structures
-│   ├── error.rs             # AppError enum + HTTP response mapping
+│   ├── models.rs            # Data structures & LaptopStatus enum
+│   ├── error.rs             # AppError enum + HTTP/HTML response mapping
+│   ├── validation.rs        # Input validation helpers
+│   ├── request_id.rs        # X-Request-Id middleware
 │   ├── db/
 │   │   ├── mod.rs
 │   │   ├── users.rs         # User database operations
 │   │   └── laptops.rs       # Laptop database operations
-│   └── handlers/
+│   ├── handlers/
+│   │   ├── mod.rs
+│   │   ├── users.rs         # User API handlers
+│   │   └── laptops.rs       # Laptop API handlers
+│   └── ui/
 │       ├── mod.rs
-│       ├── users.rs         # User HTTP handlers
-│       └── laptops.rs       # Laptop HTTP handlers
-├── .env                     # Local secrets (git-ignored)
-├── .env.example             # Template for .env
+│       ├── templates.rs     # Minijinja environment setup
+│       ├── pages.rs         # Full-page HTML handlers
+│       └── fragments.rs     # HTMX partial handlers
+├── templates/
+│   ├── base.html
+│   ├── pages/
+│   │   ├── dashboard.html
+│   │   ├── laptops.html
+│   │   └── users.html
+│   └── partials/
+│       ├── laptop_table.html
+│       ├── user_table.html
+│       ├── laptop_form.html
+│       ├── user_form.html
+│       ├── assign_modal.html
+│       └── error.html
+├── static/
+│   └── style.css
+├── scripts/
+│   ├── start.sh
+│   ├── stop.sh
+│   └── restart.sh
+├── .env.example
 ├── Cargo.toml
 └── Cargo.lock
 ```
 
 ## Server Scripts
 
-Convenience scripts for running the server in the background (Git Bash / WSL).
+Convenience scripts for running the server in the background.
 
 ```bash
 # Make executable (first time only)
@@ -177,7 +221,7 @@ cargo test
 
 ## Error Responses
 
-All errors return JSON:
+API errors return JSON:
 
 ```json
 { "error": "Laptop <id> cannot be assigned — current status is 'in_repair'." }
@@ -189,6 +233,8 @@ All errors return JSON:
 | 404    | Resource not found             |
 | 409    | Unique constraint violation    |
 | 500    | Internal server error          |
+
+> Database error details are logged server-side and never exposed to clients.
 
 ## License
 

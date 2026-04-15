@@ -115,3 +115,10 @@ pub async fn delete_user(pool: &PgPool, user_id: Uuid) -> Result<(), AppError> {
     tx.commit().await?;
     Ok(())
 }
+
+pub async fn count_users(pool: &PgPool) -> Result<i64, AppError> {
+    let (count,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users")
+        .fetch_one(pool)
+        .await?;
+    Ok(count)
+}

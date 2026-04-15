@@ -1,0 +1,18 @@
+<h2>Assign Laptop</h2>
+<form hx-post="/ui/laptops/{{ laptop_id }}/assign"
+      hx-target="#laptop-table"
+      hx-swap="innerHTML"
+      hx-on::after-request="document.getElementById('assign-modal').close()">
+    <div class="form-group">
+        <label for="user_id">Assign to</label>
+        <select name="user_id" id="user_id" required>
+            {% for user in users %}
+            <option value="{{ user.id }}">{{ user.username }} ({{ user.department }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('assign-modal').close()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Assign</button>
+    </div>
+</form>

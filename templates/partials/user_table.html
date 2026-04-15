@@ -1,0 +1,55 @@
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.department }}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm"
+                        hx-get="/ui/users/{{ user.id }}/edit-form"
+                        hx-target="#user-form-container"
+                        hx-swap="innerHTML"
+                        onclick="document.getElementById('user-form-modal').showModal()">
+                    Edit
+                </button>
+                <button class="btn btn-danger btn-sm"
+                        hx-post="/ui/users/{{ user.id }}/delete"
+                        hx-target="#user-table"
+                        hx-swap="innerHTML"
+                        hx-confirm="Delete this user? Their laptops will be unassigned.">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    {% if page > 1 %}
+    <button class="btn btn-secondary btn-sm"
+            hx-get="/ui/users?page={{ page - 1 }}"
+            hx-target="#user-table"
+            hx-swap="innerHTML">
+        Previous
+    </button>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <button class="btn btn-secondary btn-sm"
+            hx-get="/ui/users?page={{ page + 1 }}"
+            hx-target="#user-table"
+            hx-swap="innerHTML">
+        Next
+    </button>
+    {% endif %}
+</div>

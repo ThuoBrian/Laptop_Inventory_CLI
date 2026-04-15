@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <h3>Total Laptops</h3>
+        <div class="value">{{ total_laptops }}</div>
+    </div>
+    <div class="card">
+        <h3>Total Users</h3>
+        <div class="value">{{ total_users }}</div>
+    </div>
+    {% for item in status_counts %}
+    <div class="card">
+        <h3>{{ item.0 | capitalize }}</h3>
+        <div class="value">{{ item.1 }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<p>Use the sidebar to manage <a href="/ui/laptops">Laptops</a> and <a href="/ui/users">Users</a>.</p>
+{% endblock %}

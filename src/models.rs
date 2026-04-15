@@ -122,6 +122,20 @@ pub struct AssignLaptop {
     pub user_id: Uuid,
 }
 
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct LaptopWithAssignee {
+    pub id:              Uuid,
+    pub brand:           String,
+    pub model:           String,
+    pub serial_number:   String,
+    pub status:          LaptopStatus,
+    pub assigned_to:     Option<Uuid>,
+    pub assignee_name:   Option<String>,
+    pub purchase_date:   NaiveDate,
+    pub created_at:      DateTime<Utc>,
+    pub updated_at:      DateTime<Utc>,
+}
+
 // ── Pagination ────────────────────────────────────────────────────────────
 
 #[derive(Debug, Serialize)]

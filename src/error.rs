@@ -59,3 +59,24 @@ impl From<sqlx::Error> for AppError {
         }
     }
 }
+
+impl AppError {
+    pub fn to_html(&self, env: &minijinja::Environment) -> HttpResponse {
+        let message = match self {
+            AppError::Database(_) => "Internal server error".to_string(),
+            _ => self.to_string(),
+        };
+        let html = env
+            .get_template("partials/error.html")
+            .and_then(|tmpl| {
+                tmpl.render(minijinja::context! {
+                    status_code => self.status_code().as_u16(),
+                    message,
+                })
+            })
+            .unwrap_or_else(|_| format!("Error {}: {}", self.status_code().as_u16(), message));
+        HttpResponse::build(self.status_code())
+            .content_type("text/html; charset=utf-8")
+            .body(html)
+    }
+}

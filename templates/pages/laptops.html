@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Laptops{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Laptops</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('laptop-form-modal').showModal()">+ New Laptop</button>
+</div>
+
+<div id="laptop-table"
+     hx-get="/ui/laptops"
+     hx-trigger="load, refreshTable from:body"
+     hx-swap="innerHTML">
+    <p>Loading...</p>
+</div>
+
+<dialog id="laptop-form-modal">
+    <div id="laptop-form-container">
+        {% include "partials/laptop_form.html" %}
+    </div>
+</dialog>
+
+<dialog id="assign-modal">
+    <div id="assign-modal-container"></div>
+</dialog>
+{% endblock %}

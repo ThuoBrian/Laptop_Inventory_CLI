@@ -3,13 +3,6 @@ use actix_web::{HttpResponse, Responder, delete, get, post, put, web};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[derive(serde::Deserialize)]
-pub struct LaptopListQuery {
-    pub status: Option<LaptopStatus>,
-    pub page: Option<i64>,
-    pub per_page: Option<i64>,
-}
-
 #[post("/laptops")]
 pub async fn create_laptop(
     pool: web::Data<PgPool>,
@@ -29,8 +22,8 @@ pub async fn get_all_laptops(
     pool: web::Data<PgPool>,
     query: web::Query<LaptopListQuery>,
 ) -> Result<impl Responder, AppError> {
-    let page = query.page.unwrap_or(DEFAULT_PAGE);
-    let per_page = query.per_page.unwrap_or(DEFAULT_PER_PAGE).min(MAX_PER_PAGE);
+    let page = clamp_page(query.page);
+    let per_page = clamp_per_page(query.per_page);
     let laptops = db::laptops::get_all_laptops(&pool, query.into_inner().status, page, per_page).await?;
     Ok(HttpResponse::Ok().json(laptops))
 }

@@ -1,4 +1,7 @@
-use actix_web::{HttpResponse, error::ResponseError, http::StatusCode};
+use actix_web::{
+    HttpRequest, HttpResponse, Responder, body::BoxBody, error::ResponseError, http::StatusCode, web,
+};
+use minijinja::Environment;
 use serde_json::json;
 use std::fmt;
 
@@ -50,12 +53,46 @@ impl From<sqlx::Error> for AppError {
             sqlx::Error::Database(db_err) => {
                 // PostgreSQL unique-constraint violation
                 if db_err.code().as_deref() == Some("23505") {
-                    AppError::Conflict(db_err.message().to_string())
+                    log::warn!(
+                        "Unique constraint violation (constraint={:?}): {}",
+                        db_err.constraint(),
+                        db_err.message()
+                    );
+                    let friendly = match db_err.constraint() {
+                        Some("users_email_key") => "A user with this email already exists.",
+                        Some("users_username_key") => "A user with this username already exists.",
+                        Some("laptops_serial_number_key") => {
+                            "A laptop with this serial number already exists."
+                        }
+                        _ => "A record with this value already exists.",
+                    };
+                    AppError::Conflict(friendly.to_string())
                 } else {
                     AppError::Database(err.to_string())
                 }
             }
             _ => AppError::Database(err.to_string()),
+        }
+    }
+}
+
+/// Responder wrapper for UI handlers: renders `AppError` as an HTML fragment
+/// (so HTMX swaps a readable error into the DOM) instead of JSON.
+///
+/// Looks up the Minijinja environment from request app data; falls back to
+/// the default JSON error response if it isn't registered.
+pub struct UiResult(pub Result<HttpResponse, AppError>);
+
+impl Responder for UiResult {
+    type Body = BoxBody;
+
+    fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
+        match self.0 {
+            Ok(r) => r,
+            Err(e) => match req.app_data::<web::Data<Environment<'static>>>() {
+                Some(env) => e.to_html(env.get_ref()),
+                None => e.error_response(),
+            },
         }
     }
 }

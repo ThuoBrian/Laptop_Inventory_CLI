@@ -60,7 +60,7 @@
 <div class="pagination">
     {% if page > 1 %}
     <button class="btn btn-secondary btn-sm"
-            hx-get="/ui/laptops?page={{ page - 1 }}"
+            hx-get="/ui/laptops?page={{ page - 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
             hx-target="#laptop-table"
             hx-swap="innerHTML">
         Previous
@@ -69,7 +69,7 @@
     <span>Page {{ page }} of {{ total_pages }}</span>
     {% if page < total_pages %}
     <button class="btn btn-secondary btn-sm"
-            hx-get="/ui/laptops?page={{ page + 1 }}"
+            hx-get="/ui/laptops?page={{ page + 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
             hx-target="#laptop-table"
             hx-swap="innerHTML">
         Next

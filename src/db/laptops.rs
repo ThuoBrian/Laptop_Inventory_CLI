@@ -95,7 +95,7 @@ pub async fn get_laptop_by_id(pool: &PgPool, laptop_id: Uuid) -> Result<Laptop, 
     .bind(laptop_id)
     .fetch_optional(pool)
     .await?
-    .ok_or_else(|| AppError::NotFound(format!("Laptop {} not found", laptop_id)))
+    .ok_or_else(|| AppError::NotFound("Laptop not found".to_string()))
 }
 
 pub async fn update_laptop(
@@ -134,7 +134,7 @@ pub async fn update_laptop(
     .bind(laptop_id)
     .fetch_optional(pool)
     .await?
-    .ok_or_else(|| AppError::NotFound(format!("Laptop {} not found", laptop_id)))
+    .ok_or_else(|| AppError::NotFound("Laptop not found".to_string()))
 }
 
 pub async fn delete_laptop(pool: &PgPool, laptop_id: Uuid) -> Result<(), AppError> {
@@ -144,7 +144,7 @@ pub async fn delete_laptop(pool: &PgPool, laptop_id: Uuid) -> Result<(), AppErro
         .await?;
 
     if result.rows_affected() == 0 {
-        return Err(AppError::NotFound(format!("Laptop {} not found", laptop_id)));
+        return Err(AppError::NotFound("Laptop not found".to_string()));
     }
 
     Ok(())
@@ -155,56 +155,62 @@ pub async fn assign_laptop(
     laptop_id: Uuid,
     user_id: Uuid,
 ) -> Result<Laptop, AppError> {
-    // Verify the target user exists.
+    // Verify the target user exists up-front for a friendlier error than
+    // a raw FK violation.
     get_user_by_id(pool, user_id).await?;
 
-    // Verify the laptop is available.
-    let laptop = get_laptop_by_id(pool, laptop_id).await?;
-    if laptop.status != LaptopStatus::Available {
-        return Err(AppError::BadRequest(format!(
-            "Laptop {} cannot be assigned — current status is '{}'.",
-            laptop_id, laptop.status
-        )));
-    }
-
-    sqlx::query_as::<_, Laptop>(
+    let updated = sqlx::query_as::<_, Laptop>(
         r#"
         UPDATE laptops
         SET assigned_to = $1, status = 'assigned', updated_at = NOW()
-        WHERE id = $2
+        WHERE id = $2 AND status = 'available'
         RETURNING id, brand, model, serial_number, status, assigned_to,
                   purchase_date, created_at, updated_at
         "#,
     )
     .bind(user_id)
     .bind(laptop_id)
-    .fetch_one(pool)
-    .await
-    .map_err(AppError::from)
+    .fetch_optional(pool)
+    .await?;
+
+    match updated {
+        Some(laptop) => Ok(laptop),
+        None => {
+            // Either the laptop is missing or its status changed since the
+            // caller last saw it — re-read to produce an accurate error.
+            let laptop = get_laptop_by_id(pool, laptop_id).await?;
+            Err(AppError::BadRequest(format!(
+                "Laptop {} cannot be assigned — current status is '{}'.",
+                laptop_id, laptop.status
+            )))
+        }
+    }
 }
 
 pub async fn unassign_laptop(pool: &PgPool, laptop_id: Uuid) -> Result<Laptop, AppError> {
-    let laptop = get_laptop_by_id(pool, laptop_id).await?;
-    if laptop.status != LaptopStatus::Assigned {
-        return Err(AppError::BadRequest(format!(
-            "Laptop {} is not currently assigned (status: '{}').",
-            laptop_id, laptop.status
-        )));
-    }
-
-    sqlx::query_as::<_, Laptop>(
+    let updated = sqlx::query_as::<_, Laptop>(
         r#"
         UPDATE laptops
         SET assigned_to = NULL, status = 'available', updated_at = NOW()
-        WHERE id = $1
+        WHERE id = $1 AND status = 'assigned'
         RETURNING id, brand, model, serial_number, status, assigned_to,
                   purchase_date, created_at, updated_at
         "#,
     )
     .bind(laptop_id)
-    .fetch_one(pool)
-    .await
-    .map_err(AppError::from)
+    .fetch_optional(pool)
+    .await?;
+
+    match updated {
+        Some(laptop) => Ok(laptop),
+        None => {
+            let laptop = get_laptop_by_id(pool, laptop_id).await?;
+            Err(AppError::BadRequest(format!(
+                "Laptop {} is not currently assigned (status: '{}').",
+                laptop_id, laptop.status
+            )))
+        }
+    }
 }
 
 // ── Web UI queries (with assignee name) ───────────────────────────────────

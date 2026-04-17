@@ -58,7 +58,7 @@ pub async fn get_user_by_id(pool: &PgPool, user_id: Uuid) -> Result<User, AppErr
     .bind(user_id)
     .fetch_optional(pool)
     .await?
-    .ok_or_else(|| AppError::NotFound(format!("User {} not found", user_id)))
+    .ok_or_else(|| AppError::NotFound("User not found".to_string()))
 }
 
 pub async fn update_user(
@@ -84,7 +84,7 @@ pub async fn update_user(
     .bind(user_id)
     .fetch_optional(pool)
     .await?
-    .ok_or_else(|| AppError::NotFound(format!("User {} not found", user_id)))
+    .ok_or_else(|| AppError::NotFound("User not found".to_string()))
 }
 
 pub async fn delete_user(pool: &PgPool, user_id: Uuid) -> Result<(), AppError> {
@@ -109,11 +109,20 @@ pub async fn delete_user(pool: &PgPool, user_id: Uuid) -> Result<(), AppError> {
 
     if result.rows_affected() == 0 {
         // Returning NotFound will drop the transaction, rolling it back.
-        return Err(AppError::NotFound(format!("User {} not found", user_id)));
+        return Err(AppError::NotFound("User not found".to_string()));
     }
 
     tx.commit().await?;
     Ok(())
+}
+
+pub async fn get_users_for_dropdown(pool: &PgPool) -> Result<Vec<User>, AppError> {
+    let users = sqlx::query_as::<_, User>(
+        "SELECT id, username, email, department, created_at, updated_at FROM users ORDER BY username ASC",
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(users)
 }
 
 pub async fn count_users(pool: &PgPool) -> Result<i64, AppError> {

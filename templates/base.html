@@ -19,5 +19,11 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    <script>
+        document.addEventListener('htmx:configRequest', function(evt) {
+            var pair = document.cookie.split('; ').find(function(r) { return r.startsWith('csrf_token='); });
+            if (pair) { evt.detail.headers['X-CSRF-Token'] = pair.split('=')[1]; }
+        });
+    </script>
 </body>
 </html>

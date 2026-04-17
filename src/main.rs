@@ -1,3 +1,4 @@
+mod csrf;
 mod db;
 mod error;
 mod handlers;
@@ -44,6 +45,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(ui::templates::create_environment()))
             .app_data(web::JsonConfig::default().limit(1024 * 1024))
             .app_data(web::FormConfig::default().limit(1024 * 1024))
+            .wrap(csrf::Csrf)
             .wrap(request_id::RequestId)
             .wrap(middleware::Logger::default())
             // ── Static files ─────────────────────────────────────────

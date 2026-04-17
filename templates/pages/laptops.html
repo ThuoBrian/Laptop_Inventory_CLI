@@ -6,9 +6,17 @@
     <button class="btn btn-primary" onclick="document.getElementById('laptop-form-modal').showModal()">+ New Laptop</button>
 </div>
 
+<div class="status-filter">
+    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops" hx-target="#laptop-table" hx-swap="innerHTML">All</button>
+    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=available" hx-target="#laptop-table" hx-swap="innerHTML">Available</button>
+    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=assigned" hx-target="#laptop-table" hx-swap="innerHTML">Assigned</button>
+    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=in_repair" hx-target="#laptop-table" hx-swap="innerHTML">In Repair</button>
+    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=retired" hx-target="#laptop-table" hx-swap="innerHTML">Retired</button>
+</div>
+
 <div id="laptop-table"
      hx-get="/ui/laptops"
-     hx-trigger="load, refreshTable from:body"
+     hx-trigger="load"
      hx-swap="innerHTML">
     <p>Loading...</p>
 </div>

@@ -24,8 +24,11 @@ pub struct CreateUser {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateUser {
+    #[serde(default, deserialize_with = "deserialize_optional_trimmed")]
     pub username:   Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_trimmed")]
     pub email:      Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_trimmed")]
     pub department: Option<String>,
 }
 
@@ -109,12 +112,54 @@ pub struct CreateLaptop {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateLaptop {
+    #[serde(default, deserialize_with = "deserialize_optional_trimmed")]
     pub brand:         Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_trimmed")]
     pub model:         Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_trimmed")]
     pub serial_number: Option<String>,
     /// Use POST /laptops/{id}/assign or /unassign to change assigned status.
+    #[serde(default, deserialize_with = "deserialize_optional_status")]
     pub status:        Option<LaptopStatus>,
+    #[serde(default, deserialize_with = "deserialize_optional_date")]
     pub purchase_date: Option<NaiveDate>,
+}
+
+fn deserialize_optional_trimmed<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: Option<String> = Option::deserialize(deserializer)?;
+    Ok(s.and_then(|v| {
+        let t = v.trim();
+        if t.is_empty() { None } else { Some(t.to_string()) }
+    }))
+}
+
+fn deserialize_optional_status<'de, D>(deserializer: D) -> Result<Option<LaptopStatus>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: Option<String> = Option::deserialize(deserializer)?;
+    match s {
+        None => Ok(None),
+        Some(v) if v.trim().is_empty() => Ok(None),
+        Some(v) => v.trim().parse::<LaptopStatus>().map(Some).map_err(serde::de::Error::custom),
+    }
+}
+
+fn deserialize_optional_date<'de, D>(deserializer: D) -> Result<Option<NaiveDate>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: Option<String> = Option::deserialize(deserializer)?;
+    match s {
+        None => Ok(None),
+        Some(v) if v.trim().is_empty() => Ok(None),
+        Some(v) => NaiveDate::parse_from_str(v.trim(), "%Y-%m-%d")
+            .map(Some)
+            .map_err(serde::de::Error::custom),
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -157,3 +202,24 @@ impl<T> PaginatedResponse<T> {
 pub const DEFAULT_PAGE: i64 = 1;
 pub const DEFAULT_PER_PAGE: i64 = 50;
 pub const MAX_PER_PAGE: i64 = 100;
+
+pub fn clamp_page(page: Option<i64>) -> i64 {
+    page.unwrap_or(DEFAULT_PAGE).max(1)
+}
+
+pub fn clamp_per_page(per_page: Option<i64>) -> i64 {
+    per_page.unwrap_or(DEFAULT_PER_PAGE).clamp(1, MAX_PER_PAGE)
+}
+
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct LaptopListQuery {
+    pub status: Option<LaptopStatus>,
+    pub page: Option<i64>,
+    pub per_page: Option<i64>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct PaginationParams {
+    pub page: Option<i64>,
+    pub per_page: Option<i64>,
+}

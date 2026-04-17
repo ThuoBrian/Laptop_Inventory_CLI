@@ -2,7 +2,7 @@
 <form hx-post="/ui/laptops/{{ laptop_id }}/assign"
       hx-target="#laptop-table"
       hx-swap="innerHTML"
-      hx-on::after-request="document.getElementById('assign-modal').close()">
+      hx-on::after-request="if(event.detail.successful) document.getElementById('assign-modal').close()">
     <div class="form-group">
         <label for="user_id">Assign to</label>
         <select name="user_id" id="user_id" required>

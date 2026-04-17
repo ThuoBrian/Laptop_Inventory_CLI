@@ -2,7 +2,7 @@
 <form hx-post="{% if laptop is defined %}/ui/laptops/{{ laptop.id }}/edit{% else %}/ui/laptops/new{% endif %}"
       hx-target="#laptop-table"
       hx-swap="innerHTML"
-      hx-on::after-request="document.getElementById('laptop-form-modal').close()">
+      hx-on::after-request="if(event.detail.successful) document.getElementById('laptop-form-modal').close()">
     <div class="form-group">
         <label for="brand">Brand</label>
         <input type="text" name="brand" id="brand" required value="{{ laptop.brand | default(value='') }}">

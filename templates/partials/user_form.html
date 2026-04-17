@@ -2,7 +2,7 @@
 <form hx-post="{% if user is defined %}/ui/users/{{ user.id }}/edit{% else %}/ui/users/new{% endif %}"
       hx-target="#user-table"
       hx-swap="innerHTML"
-      hx-on::after-request="document.getElementById('user-form-modal').close()">
+      hx-on::after-request="if(event.detail.successful) document.getElementById('user-form-modal').close()">
     <div class="form-group">
         <label for="username">Username</label>
         <input type="text" name="username" id="username" required value="{{ user.username | default(value='') }}">

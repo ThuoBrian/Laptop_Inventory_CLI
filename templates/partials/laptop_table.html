@@ -42,7 +42,7 @@
             <td>{{ laptop.model }}</td>
             <td>{{ laptop.serial_number }}</td>
             <td><span class="badge badge-{{ laptop.status }}">{{ laptop.status }}</span></td>
-            <td>{{ laptop.assignee_name | default("—") }}</td>
+            <td>{{ laptop.assignee_name | value_or("—") }}</td>
             <td>{{ laptop.purchase_date }}</td>
             <td>
                 <button class="btn btn-secondary btn-sm"

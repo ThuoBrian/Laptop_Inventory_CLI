@@ -21,7 +21,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5342/ui)",
       "Bash(curl -s http://127.0.0.1:5342/api/laptops)",
       "Bash(curl -s http://127.0.0.1:5342/api/users)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(python3 -c ' *)",
+      "Bash(pkill -f \"target/debug/laptop_inventory_cli\")"
     ]
   }
 }

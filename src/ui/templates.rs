@@ -1,4 +1,4 @@
-use minijinja::Environment;
+use minijinja::{Environment, Value};
 
 pub fn create_environment() -> Environment<'static> {
     let mut env = Environment::new();
@@ -7,7 +7,16 @@ pub fn create_environment() -> Environment<'static> {
         Ok(std::fs::read_to_string(path).ok())
     });
     env.add_filter("display_status", display_status);
+    env.add_filter("value_or", value_or);
     env
+}
+
+fn value_or(value: Value, default: String) -> String {
+    if value.is_none() || value.is_undefined() {
+        default
+    } else {
+        value.to_string()
+    }
 }
 
 fn display_status(status: String) -> String {

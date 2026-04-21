@@ -18,7 +18,7 @@ async fn render_laptop_table(
     let result =
         db::laptops::get_all_laptops_with_assignee(pool, status.clone(), page, DEFAULT_PER_PAGE)
             .await?;
-    let status_str = status.as_ref().map(|s| s.to_string());
+    let status_str = status.as_ref().map(|s| s.to_string()).unwrap_or_default();
     let tmpl = env
         .get_template("partials/laptop_table.html")
         .map_err(|e| AppError::BadRequest(e.to_string()))?;
@@ -72,7 +72,7 @@ pub async fn new_laptop_form(
     query: web::Query<LaptopListQuery>,
 ) -> UiResult {
     UiResult(async move {
-        let status_filter = query.status.as_ref().map(|s| s.to_string());
+        let status_filter = query.status.as_ref().map(|s| s.to_string()).unwrap_or_default();
         let current_page = clamp_page(query.page);
         super::render_template(
             &env,
@@ -122,7 +122,7 @@ pub async fn edit_laptop_form(
     UiResult(
         async move {
             let laptop = db::laptops::get_laptop_by_id(&pool, path.into_inner()).await?;
-            let status_filter = query.status.as_ref().map(|s| s.to_string());
+            let status_filter = query.status.as_ref().map(|s| s.to_string()).unwrap_or_default();
             let current_page = clamp_page(query.page);
             super::render_template(
                 &env,
@@ -196,7 +196,7 @@ pub async fn assign_laptop_form_get(
         async move {
             let laptop_id = path.into_inner();
             let users = db::users::get_users_for_dropdown(&pool).await?;
-            let status_filter = query.status.as_ref().map(|s| s.to_string());
+            let status_filter = query.status.as_ref().map(|s| s.to_string()).unwrap_or_default();
             let current_page = clamp_page(query.page);
             super::render_template(
                 &env,

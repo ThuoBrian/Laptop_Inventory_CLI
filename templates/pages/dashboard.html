@@ -79,7 +79,7 @@
         <li class="activity-item">
             {% if laptop.status == "assigned" %}
                 <span class="activity-icon activity-icon-assigned">&#128100;</span>
-                <span class="activity-text"><strong>{{ laptop.assignee_name | default("Unassigned") }}</strong> &rarr; {{ laptop.brand }} {{ laptop.model }}</span>
+                <span class="activity-text"><strong>{{ laptop.assignee_name | value_or("Unassigned") }}</strong> &rarr; {{ laptop.brand }} {{ laptop.model }}</span>
                 <span class="activity-badge badge badge-{{ laptop.status }}">{{ laptop.status | display_status }}</span>
             {% else %}
                 <span class="activity-icon activity-icon-{{ laptop.status }}">&#128187;</span>

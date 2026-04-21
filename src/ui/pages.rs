@@ -50,7 +50,7 @@ pub async fn laptops_page(
         let page = clamp_page(query.page);
         let per_page = clamp_per_page(query.per_page);
         let status = query.status.clone();
-        let status_str = status.as_ref().map(|s| s.to_string());
+        let status_str = status.as_ref().map(|s| s.to_string()).unwrap_or_default();
         let result = db::laptops::get_all_laptops_with_assignee(&pool, status, page, per_page).await?;
 
         if is_htmx_request(&req) {

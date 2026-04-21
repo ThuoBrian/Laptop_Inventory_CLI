@@ -22,6 +22,47 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .card h3 { font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
 .card .value { font-size: 2rem; font-weight: 700; }
 
+/* ── Dashboard: Summary Cards ─────────────────────────────── */
+.dash-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+.card-summary { display: flex; align-items: center; gap: 1rem; background: #fff; border-radius: 8px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-decoration: none; color: inherit; border-left: 4px solid #dee2e6; transition: box-shadow 0.2s, transform 0.15s; }
+.card-summary:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
+.card-laptops { border-left-color: #007bff; }
+.card-users { border-left-color: #6f42c1; }
+.card-summary-icon { font-size: 2rem; line-height: 1; }
+.card-summary-value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.card-summary-label { font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Dashboard: Section ───────────────────────────────────── */
+.dash-section { margin-bottom: 2rem; }
+.dash-section h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #495057; }
+
+/* ── Dashboard: Status Cards ─────────────────────────────── */
+.dash-status-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.card-status { background: #fff; border-radius: 6px; padding: 1rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-top: 3px solid #dee2e6; }
+.card-status-available { border-top-color: #28a745; }
+.card-status-assigned { border-top-color: #007bff; }
+.card-status-in_repair { border-top-color: #ffc107; }
+.card-status-retired { border-top-color: #6c757d; }
+.card-status-count { font-size: 1.75rem; font-weight: 700; line-height: 1.1; }
+.card-status-label { font-size: 0.8rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.25rem; }
+
+/* ── Dashboard: Status Bar ────────────────────────────────── */
+.status-bar { display: flex; border-radius: 6px; overflow: hidden; height: 2rem; background: #e9ecef; }
+.status-bar-segment { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 600; min-width: 0; overflow: hidden; white-space: nowrap; transition: width 0.3s; }
+.segment-available { background: #28a745; }
+.segment-assigned { background: #007bff; }
+.segment-in_repair { background: #ffc107; color: #333; }
+.segment-retired { background: #6c757d; }
+
+/* ── Dashboard: Activity List ─────────────────────────────── */
+.activity-list { list-style: none; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+.activity-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-bottom: 1px solid #f1f3f5; }
+.activity-item:last-child { border-bottom: none; }
+.activity-icon { font-size: 1.25rem; line-height: 1; flex-shrink: 0; }
+.activity-text { flex: 1; font-size: 0.9rem; }
+.activity-text strong { color: #333; }
+.activity-badge { flex-shrink: 0; }
+
 /* ── Tables ─────────────────────────────────────────────────── */
 table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 th { background: #f8f9fa; text-align: left; padding: 0.75rem 1rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #7f8c8d; border-bottom: 2px solid #e9ecef; }

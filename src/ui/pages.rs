@@ -23,6 +23,7 @@ pub async fn dashboard(
         let total_laptops = db::laptops::count_laptops(&pool).await?;
         let total_users = db::users::count_users(&pool).await?;
         let status_counts = db::laptops::count_laptops_by_status(&pool).await?;
+        let recent_laptops = db::laptops::get_recent_laptops(&pool, 5).await?;
 
         super::render_template(
             &env,
@@ -32,6 +33,7 @@ pub async fn dashboard(
                 total_laptops,
                 total_users,
                 status_counts,
+                recent_laptops,
             },
         )
     }.await)

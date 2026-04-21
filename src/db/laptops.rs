@@ -295,3 +295,17 @@ pub async fn count_laptops_by_status(pool: &PgPool) -> Result<Vec<(String, i64)>
     .await?;
     Ok(counts)
 }
+
+pub async fn get_recent_laptops(pool: &PgPool, limit: i64) -> Result<Vec<LaptopWithAssignee>, AppError> {
+    let result = sqlx::query_as::<_, LaptopWithAssignee>(
+        "SELECT l.id, l.brand, l.model, l.serial_number, l.status, l.assigned_to, \
+         u.username AS assignee_name, l.purchase_date, l.created_at, l.updated_at \
+         FROM laptops l \
+         LEFT JOIN users u ON l.assigned_to = u.id \
+         ORDER BY l.updated_at DESC LIMIT $1",
+    )
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(result)
+}

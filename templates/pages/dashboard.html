@@ -5,22 +5,90 @@
     <h1>Dashboard</h1>
 </div>
 
-<div class="cards">
-    <div class="card">
-        <h3>Total Laptops</h3>
-        <div class="value">{{ total_laptops }}</div>
-    </div>
-    <div class="card">
-        <h3>Total Users</h3>
-        <div class="value">{{ total_users }}</div>
-    </div>
-    {% for item in status_counts %}
-    <div class="card">
-        <h3>{{ item.0 | display_status }}</h3>
-        <div class="value">{{ item.1 }}</div>
-    </div>
-    {% endfor %}
+<div class="dash-summary">
+    <a href="/ui/laptops" class="card-summary card-laptops">
+        <div class="card-summary-icon">&#128187;</div>
+        <div class="card-summary-info">
+            <div class="card-summary-value">{{ total_laptops }}</div>
+            <div class="card-summary-label">Total Laptops</div>
+        </div>
+    </a>
+    <a href="/ui/users" class="card-summary card-users">
+        <div class="card-summary-icon">&#128100;</div>
+        <div class="card-summary-info">
+            <div class="card-summary-value">{{ total_users }}</div>
+            <div class="card-summary-label">Total Users</div>
+        </div>
+    </a>
 </div>
 
-<p>Use the sidebar to manage <a href="/ui/laptops">Laptops</a> and <a href="/ui/users">Users</a>.</p>
+{% if status_counts %}
+<div class="dash-section">
+    <h2>Status Breakdown</h2>
+    <div class="dash-status-cards">
+        {% for item in status_counts %}
+        {% if item.0 == "available" %}
+        <div class="card-status card-status-available">
+            <div class="card-status-count">{{ item.1 }}</div>
+            <div class="card-status-label">Available</div>
+        </div>
+        {% elif item.0 == "assigned" %}
+        <div class="card-status card-status-assigned">
+            <div class="card-status-count">{{ item.1 }}</div>
+            <div class="card-status-label">Assigned</div>
+        </div>
+        {% elif item.0 == "in_repair" %}
+        <div class="card-status card-status-in_repair">
+            <div class="card-status-count">{{ item.1 }}</div>
+            <div class="card-status-label">In Repair</div>
+        </div>
+        {% elif item.0 == "retired" %}
+        <div class="card-status card-status-retired">
+            <div class="card-status-count">{{ item.1 }}</div>
+            <div class="card-status-label">Retired</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    <div class="status-bar">
+        {% for item in status_counts %}
+        {% if total_laptops > 0 %}
+        {% set width_pct = (item.1 / total_laptops * 100) | int %}
+        {% else %}
+        {% set width_pct = 0 %}
+        {% endif %}
+        {% if item.0 == "available" %}
+        <div class="status-bar-segment segment-available" style="width: {{ width_pct }}%" title="Available: {{ item.1 }}">{{ item.1 }}</div>
+        {% elif item.0 == "assigned" %}
+        <div class="status-bar-segment segment-assigned" style="width: {{ width_pct }}%" title="Assigned: {{ item.1 }}">{{ item.1 }}</div>
+        {% elif item.0 == "in_repair" %}
+        <div class="status-bar-segment segment-in_repair" style="width: {{ width_pct }}%" title="In Repair: {{ item.1 }}">{{ item.1 }}</div>
+        {% elif item.0 == "retired" %}
+        <div class="status-bar-segment segment-retired" style="width: {{ width_pct }}%" title="Retired: {{ item.1 }}">{{ item.1 }}</div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if recent_laptops %}
+<div class="dash-section">
+    <h2>Recent Activity</h2>
+    <ul class="activity-list">
+    {% for laptop in recent_laptops %}
+        <li class="activity-item">
+            {% if laptop.status == "assigned" %}
+                <span class="activity-icon activity-icon-assigned">&#128100;</span>
+                <span class="activity-text"><strong>{{ laptop.assignee_name | default("Unassigned") }}</strong> &rarr; {{ laptop.brand }} {{ laptop.model }}</span>
+                <span class="activity-badge badge badge-{{ laptop.status }}">{{ laptop.status | display_status }}</span>
+            {% else %}
+                <span class="activity-icon activity-icon-{{ laptop.status }}">&#128187;</span>
+                <span class="activity-text">{{ laptop.brand }} {{ laptop.model }}</span>
+                <span class="activity-badge badge badge-{{ laptop.status }}">{{ laptop.status | display_status }}</span>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
 {% endblock %}

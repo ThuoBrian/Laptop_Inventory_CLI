@@ -1,3 +1,28 @@
+{% if not status_filter %}
+{% set active_filter = "" %}
+{% elif status_filter == "available" %}
+{% set active_filter = "available" %}
+{% elif status_filter == "assigned" %}
+{% set active_filter = "assigned" %}
+{% elif status_filter == "in_repair" %}
+{% set active_filter = "in_repair" %}
+{% elif status_filter == "retired" %}
+{% set active_filter = "retired" %}
+{% endif %}
+{% set qs = "" %}
+{% if status_filter %}{% set qs = "&status=" ~ status_filter %}{% endif %}
+<div class="status-filter">
+    <button class="btn btn-secondary btn-sm {% if not status_filter %}btn-active{% endif %}"
+            hx-get="/ui/laptops" hx-target="#laptop-table" hx-swap="innerHTML">All</button>
+    <button class="btn btn-secondary btn-sm {% if status_filter == 'available' %}btn-active{% endif %}"
+            hx-get="/ui/laptops?status=available" hx-target="#laptop-table" hx-swap="innerHTML">Available</button>
+    <button class="btn btn-secondary btn-sm {% if status_filter == 'assigned' %}btn-active{% endif %}"
+            hx-get="/ui/laptops?status=assigned" hx-target="#laptop-table" hx-swap="innerHTML">Assigned</button>
+    <button class="btn btn-secondary btn-sm {% if status_filter == 'in_repair' %}btn-active{% endif %}"
+            hx-get="/ui/laptops?status=in_repair" hx-target="#laptop-table" hx-swap="innerHTML">In Repair</button>
+    <button class="btn btn-secondary btn-sm {% if status_filter == 'retired' %}btn-active{% endif %}"
+            hx-get="/ui/laptops?status=retired" hx-target="#laptop-table" hx-swap="innerHTML">Retired</button>
+</div>
 <table>
     <thead>
         <tr>
@@ -17,42 +42,41 @@
             <td>{{ laptop.model }}</td>
             <td>{{ laptop.serial_number }}</td>
             <td><span class="badge badge-{{ laptop.status }}">{{ laptop.status }}</span></td>
-            <td>{{ laptop.assignee_name | default(value="—") }}</td>
+            <td>{{ laptop.assignee_name | default("—") }}</td>
             <td>{{ laptop.purchase_date }}</td>
             <td>
                 <button class="btn btn-secondary btn-sm"
-                        hx-get="/ui/laptops/{{ laptop.id }}/edit-form"
+                        hx-get="/ui/laptops/{{ laptop.id }}/edit-form?page={{ page }}{{ qs }}"
                         hx-target="#laptop-form-container"
                         hx-swap="innerHTML"
-                        onclick="document.getElementById('laptop-form-modal').showModal()">
+                        hx-on::after-swap="document.getElementById('laptop-form-modal').showModal()">
                     Edit
                 </button>
                 {% if laptop.status == "available" %}
                 <button class="btn btn-primary btn-sm"
-                        hx-get="/ui/laptops/{{ laptop.id }}/assign-form"
+                        hx-get="/ui/laptops/{{ laptop.id }}/assign-form?page={{ page }}{{ qs }}"
                         hx-target="#assign-modal-container"
                         hx-swap="innerHTML"
-                        onclick="document.getElementById('assign-modal').showModal()">
+                        hx-on::after-swap="document.getElementById('assign-modal').showModal()">
                     Assign
                 </button>
                 {% endif %}
                 {% if laptop.status == "assigned" %}
                 <button class="btn btn-secondary btn-sm"
-                        hx-post="/ui/laptops/{{ laptop.id }}/unassign"
-                        hx-target="#laptop-table"
-                        hx-swap="innerHTML">
+                        hx-post="/ui/laptops/{{ laptop.id }}/unassign?page={{ page }}{{ qs }}"
+                        hx-confirm="Unassign this laptop?">
                     Unassign
                 </button>
                 {% endif %}
                 <button class="btn btn-danger btn-sm"
-                        hx-post="/ui/laptops/{{ laptop.id }}/delete"
-                        hx-target="#laptop-table"
-                        hx-swap="innerHTML"
+                        hx-post="/ui/laptops/{{ laptop.id }}/delete?page={{ page }}{{ qs }}"
                         hx-confirm="Delete this laptop? This cannot be undone.">
                     Delete
                 </button>
             </td>
         </tr>
+    {% else %}
+        <tr><td colspan="7" class="empty-state">No laptops found. Click "+ New Laptop" to add one.</td></tr>
     {% endfor %}
     </tbody>
 </table>

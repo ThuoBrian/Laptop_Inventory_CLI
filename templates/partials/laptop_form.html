@@ -1,25 +1,28 @@
-<h2>{% if laptop is defined %}Edit Laptop{% else %}New Laptop{% endif %}</h2>
-<form hx-post="{% if laptop is defined %}/ui/laptops/{{ laptop.id }}/edit{% else %}/ui/laptops/new{% endif %}"
-      hx-target="#laptop-table"
+{% set laptop = laptop | default({}) %}
+{% set status_filter = status_filter | default('') %}
+{% set current_page = current_page | default(1) %}
+<h2>{% if laptop.id %}Edit Laptop{% else %}New Laptop{% endif %}</h2>
+<form hx-post="{% if laptop.id %}/ui/laptops/{{ laptop.id }}/edit{% else %}/ui/laptops/new{% endif %}?page={{ current_page }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+      hx-target="#laptop-form-container"
       hx-swap="innerHTML"
       hx-on::after-request="if(event.detail.successful) document.getElementById('laptop-form-modal').close()">
     <div class="form-group">
         <label for="brand">Brand</label>
-        <input type="text" name="brand" id="brand" required value="{{ laptop.brand | default(value='') }}">
+        <input type="text" name="brand" id="brand" required value="{{ laptop.brand | default('') }}">
     </div>
     <div class="form-group">
         <label for="model">Model</label>
-        <input type="text" name="model" id="model" required value="{{ laptop.model | default(value='') }}">
+        <input type="text" name="model" id="model" required value="{{ laptop.model | default('') }}">
     </div>
     <div class="form-group">
         <label for="serial_number">Serial Number</label>
-        <input type="text" name="serial_number" id="serial_number" required value="{{ laptop.serial_number | default(value='') }}">
+        <input type="text" name="serial_number" id="serial_number" required value="{{ laptop.serial_number | default('') }}">
     </div>
     <div class="form-group">
         <label for="purchase_date">Purchase Date</label>
-        <input type="date" name="purchase_date" id="purchase_date" required value="{{ laptop.purchase_date | default(value='') }}">
+        <input type="date" name="purchase_date" id="purchase_date" required value="{{ laptop.purchase_date | default('') }}">
     </div>
-    {% if laptop is defined %}
+    {% if laptop.id %}
     <div class="form-group">
         <label for="status">Status</label>
         <select name="status" id="status">

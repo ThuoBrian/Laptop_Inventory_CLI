@@ -1,6 +1,8 @@
+{% set status_filter = status_filter | default('') %}
+{% set current_page = current_page | default(1) %}
 <h2>Assign Laptop</h2>
-<form hx-post="/ui/laptops/{{ laptop_id }}/assign"
-      hx-target="#laptop-table"
+<form hx-post="/ui/laptops/{{ laptop_id }}/assign?page={{ current_page }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+      hx-target="#assign-modal-container"
       hx-swap="innerHTML"
       hx-on::after-request="if(event.detail.successful) document.getElementById('assign-modal').close()">
     <div class="form-group">

@@ -24,6 +24,12 @@
             var pair = document.cookie.split('; ').find(function(r) { return r.startsWith('csrf_token='); });
             if (pair) { evt.detail.headers['X-CSRF-Token'] = pair.split('=')[1]; }
         });
+        document.body.addEventListener('htmx:beforeRequest', function() {
+            document.body.classList.add('htmx-loading');
+        });
+        document.body.addEventListener('htmx:afterRequest', function() {
+            document.body.classList.remove('htmx-loading');
+        });
     </script>
 </body>
 </html>

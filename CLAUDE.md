@@ -80,6 +80,4 @@ Server scripts: `./scripts/start.sh`, `./scripts/stop.sh`, `./scripts/restart.sh
 
 See `priority_fixes.md` for the full list. The most impactful open items:
 - Modal closes on form error (HTMX `hx-on::after-request`), hiding the error banner the server now returns
-- No CSRF protection on `/ui/...` POST routes
-- Status filter is dropped when paginating the laptops table
 - API handlers don't clamp `page`/`per_page` (UI handlers do)

@@ -6,7 +6,22 @@
       "Read(//c//**)",
       "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/**)",
       "Bash(env)",
-      "Bash(CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=\"rust-lld.exe\" cargo check --quiet)"
+      "Bash(CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=\"rust-lld.exe\" cargo check --quiet)",
+      "Bash(cargo build *)",
+      "Bash(cargo clippy *)",
+      "Bash(pg_isready -h localhost -p 5432)",
+      "Bash(brew list *)",
+      "Read(//Applications/Postgres.app/Contents/**)",
+      "Bash(mdfind -name \"psql\")",
+      "Read(//Library/PostgreSQL/18/bin/**)",
+      "Bash(/Library/PostgreSQL/18/bin/psql --version)",
+      "Bash(/Library/PostgreSQL/18/bin/psql *)",
+      "Bash(PGPASSWORD=postgres /Library/PostgreSQL/18/bin/psql *)",
+      "Bash(cargo run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5342/ui)",
+      "Bash(curl -s http://127.0.0.1:5342/api/laptops)",
+      "Bash(curl -s http://127.0.0.1:5342/api/users)",
+      "Bash(curl *)"
     ]
   }
 }

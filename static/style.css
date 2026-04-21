@@ -70,6 +70,17 @@ dialog h2 { font-size: 1.2rem; margin-bottom: 1rem; }
 .htmx-request .htmx-indicator { display: inline-block; }
 .htmx-request.htmx-indicator { display: inline-block; }
 
+/* ── Active Filter Button ────────────────────────────────────── */
+.btn-active { background: #007bff; color: #fff; }
+.btn-active:hover { background: #0069d9; }
+
+/* ── Empty State ─────────────────────────────────────────────── */
+.empty-state { text-align: center; color: #6c757d; padding: 2rem 1rem; font-style: italic; }
+
+/* ── Loading State ───────────────────────────────────────────── */
+.htmx-loading { cursor: wait; }
+.htmx-loading button { opacity: 0.7; pointer-events: none; }
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .layout { grid-template-columns: 1fr; }

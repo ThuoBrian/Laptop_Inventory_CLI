@@ -69,6 +69,7 @@ async fn main() -> std::io::Result<()> {
             .service(ui::pages::laptops_page)
             .service(ui::pages::users_page)
             // ── Web UI: Laptop fragments ─────────────────────────────
+            .service(ui::fragments::new_laptop_form)
             .service(ui::fragments::create_laptop_form)
             .service(ui::fragments::edit_laptop_form)
             .service(ui::fragments::update_laptop_form)
@@ -77,6 +78,7 @@ async fn main() -> std::io::Result<()> {
             .service(ui::fragments::assign_laptop_form)
             .service(ui::fragments::unassign_laptop_form)
             // ── Web UI: User fragments ───────────────────────────────
+            .service(ui::fragments::new_user_form)
             .service(ui::fragments::create_user_form)
             .service(ui::fragments::edit_user_form)
             .service(ui::fragments::update_user_form)

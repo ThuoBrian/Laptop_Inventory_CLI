@@ -16,7 +16,7 @@
     </div>
     {% for item in status_counts %}
     <div class="card">
-        <h3>{{ item.0 | capitalize }}</h3>
+        <h3>{{ item.0 | display_status }}</h3>
         <div class="value">{{ item.1 }}</div>
     </div>
     {% endfor %}

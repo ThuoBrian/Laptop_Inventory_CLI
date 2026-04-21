@@ -15,21 +15,21 @@
             <td>{{ user.department }}</td>
             <td>
                 <button class="btn btn-secondary btn-sm"
-                        hx-get="/ui/users/{{ user.id }}/edit-form"
+                        hx-get="/ui/users/{{ user.id }}/edit-form?page={{ page }}"
                         hx-target="#user-form-container"
                         hx-swap="innerHTML"
-                        onclick="document.getElementById('user-form-modal').showModal()">
+                        hx-on::after-swap="document.getElementById('user-form-modal').showModal()">
                     Edit
                 </button>
                 <button class="btn btn-danger btn-sm"
-                        hx-post="/ui/users/{{ user.id }}/delete"
-                        hx-target="#user-table"
-                        hx-swap="innerHTML"
+                        hx-post="/ui/users/{{ user.id }}/delete?page={{ page }}"
                         hx-confirm="Delete this user? Their laptops will be unassigned.">
                     Delete
                 </button>
             </td>
         </tr>
+    {% else %}
+        <tr><td colspan="4" class="empty-state">No users found. Click "+ New User" to add one.</td></tr>
     {% endfor %}
     </tbody>
 </table>

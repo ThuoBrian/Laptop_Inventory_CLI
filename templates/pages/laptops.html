@@ -3,15 +3,11 @@
 {% block content %}
 <div class="page-header">
     <h1>Laptops</h1>
-    <button class="btn btn-primary" onclick="document.getElementById('laptop-form-modal').showModal()">+ New Laptop</button>
-</div>
-
-<div class="status-filter">
-    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops" hx-target="#laptop-table" hx-swap="innerHTML">All</button>
-    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=available" hx-target="#laptop-table" hx-swap="innerHTML">Available</button>
-    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=assigned" hx-target="#laptop-table" hx-swap="innerHTML">Assigned</button>
-    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=in_repair" hx-target="#laptop-table" hx-swap="innerHTML">In Repair</button>
-    <button class="btn btn-secondary btn-sm" hx-get="/ui/laptops?status=retired" hx-target="#laptop-table" hx-swap="innerHTML">Retired</button>
+    <button class="btn btn-primary"
+            hx-get="/ui/laptops/new-form"
+            hx-target="#laptop-form-container"
+            hx-swap="innerHTML"
+            hx-on::after-swap="document.getElementById('laptop-form-modal').showModal()">+ New Laptop</button>
 </div>
 
 <div id="laptop-table"
@@ -22,9 +18,7 @@
 </div>
 
 <dialog id="laptop-form-modal">
-    <div id="laptop-form-container">
-        {% include "partials/laptop_form.html" %}
-    </div>
+    <div id="laptop-form-container"></div>
 </dialog>
 
 <dialog id="assign-modal">

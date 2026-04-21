@@ -1,19 +1,21 @@
-<h2>{% if user is defined %}Edit User{% else %}New User{% endif %}</h2>
-<form hx-post="{% if user is defined %}/ui/users/{{ user.id }}/edit{% else %}/ui/users/new{% endif %}"
-      hx-target="#user-table"
+{% set user = user | default({}) %}
+{% set current_page = current_page | default(1) %}
+<h2>{% if user.id %}Edit User{% else %}New User{% endif %}</h2>
+<form hx-post="{% if user.id %}/ui/users/{{ user.id }}/edit{% else %}/ui/users/new{% endif %}?page={{ current_page }}"
+      hx-target="#user-form-container"
       hx-swap="innerHTML"
       hx-on::after-request="if(event.detail.successful) document.getElementById('user-form-modal').close()">
     <div class="form-group">
         <label for="username">Username</label>
-        <input type="text" name="username" id="username" required value="{{ user.username | default(value='') }}">
+        <input type="text" name="username" id="username" required value="{{ user.username | default('') }}">
     </div>
     <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" name="email" id="email" required value="{{ user.email | default(value='') }}">
+        <input type="email" name="email" id="email" required value="{{ user.email | default('') }}">
     </div>
     <div class="form-group">
         <label for="department">Department</label>
-        <input type="text" name="department" id="department" required value="{{ user.department | default(value='') }}">
+        <input type="text" name="department" id="department" required value="{{ user.department | default('') }}">
     </div>
     <div class="form-actions">
         <button type="button" class="btn btn-secondary" onclick="document.getElementById('user-form-modal').close()">Cancel</button>

@@ -1,9 +1,9 @@
 use crate::{
     db,
-    error::{AppError, UiResult},
+    error::UiResult,
     models::*,
 };
-use actix_web::{HttpResponse, get, web, HttpRequest};
+use actix_web::{get, web, HttpRequest};
 use minijinja::Environment;
 use sqlx::PgPool;
 
